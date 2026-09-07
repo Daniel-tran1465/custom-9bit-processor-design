@@ -33,10 +33,8 @@ typedef enum logic [4:0] {
     SUB_S3 = 5'b01001,
 	 LOAD = 5'b01010,
 	 LOAD_L2 = 5'b01011,
-	 LOAD_L3 = 5'b01100,
 	 STORE = 5'b01101,
 	 STORE_S2 = 5'b01110,
-	 STORE_S3 = 5'b01111,
 	 MVI_T2 = 5'b10000,
 	 FETCH = 5'b10001,
 	 ADD_T3 = 5'b10010,
@@ -114,7 +112,6 @@ case (current_state)
         ADD: begin
             R_out = (8'b1 << Rx);
             Ain   = 1'b1;
-				incr_pc = 1'b1;
             next_state = ADD_T2; 
         end
 
@@ -135,7 +132,6 @@ case (current_state)
         SUB: begin
             R_out = (8'b1 << Rx);
             Ain   = 1'b1;
-				incr_pc = 1'b1;
             next_state = SUB_S2;
         end
 
@@ -156,16 +152,10 @@ case (current_state)
 		  LOAD: begin
 				R_out = (8'b1 << Ry);
 				ADDRin = 1'b1;
-				incr_pc = 1'b1;
 				next_state = LOAD_L2;
 		  end
-		  
+		 	  
 		  LOAD_L2: begin
-				W_D = 1'b1;
-				next_state = LOAD_L3;
-		  end
-		  
-		  LOAD_L3: begin
 				R_in = (8'b1 << Rx);
 				DINout = 1'b1;
 				Done = 1'b1;
@@ -175,17 +165,12 @@ case (current_state)
 		  STORE: begin
 				R_out = (8'b1 << Ry);
 				ADDRin = 1'b1;
-				incr_pc = 1'b1;
 				next_state = STORE_S2;
 		  end
-        
-		  STORE_S2: begin
-				R_out = (8'b1 << Rx);
-				DOUTin = 1'b1;
-				next_state = STORE_S3;
-		  end
 		  
-		  STORE_S3: begin
+		  STORE_S2: begin
+		  		R_out = (8'b1 << Rx);
+				DOUTin = 1'b1;
 				W_D = 1'b1;
 				Done = 1'b1;
 				next_state = FETCH;
@@ -208,6 +193,7 @@ case (current_state)
 		  BB1: begin
 				case(bbcase)
 					2'b00: begin
+							 incr_pc = 1'b1;
 							 Done = 1'b1;
 							 next_state = FETCH;
 							end
@@ -233,10 +219,10 @@ case (current_state)
 		  
         DECODE: begin
             case (opcode)
-                5'b00000: next_state = MV;
-                5'b00001: next_state = MVI;
-                5'b00010: next_state = ADD;
-                5'b00011: next_state = SUB;
+                	5'b00000: next_state = MV;
+                	5'b00001: next_state = MVI;
+               	 	5'b00010: next_state = ADD;
+                	5'b00011: next_state = SUB;
 					 5'b01010: next_state = LOAD;
 					 5'b01101: next_state = STORE;
 					 5'b00110: next_state = BRNE;
