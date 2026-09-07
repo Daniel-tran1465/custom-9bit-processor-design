@@ -62,8 +62,7 @@ Thiết kế đã được mô phỏng và kiểm thử kỹ lưỡng bằng Tes
 `![Simulation Waveform](docs/images/waveform_example.png)`
 
 ### Sơ đồ mạch RTL (RTL Viewer)
-*(Hãy thêm ảnh xuất từ chức năng Quartus RTL Viewer tại đây)*
-`![RTL Viewer](docs/images/rtl_schematic.png)`
+*docs/Screenshot 2026-09-07 170935.png*
 
 ---
 
