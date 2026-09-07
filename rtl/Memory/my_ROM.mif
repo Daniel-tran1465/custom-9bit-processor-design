@@ -1,0 +1,36 @@
+width=9;
+depth=128;
+
+%
+ format of data and address stored in this file
+ uns : unsigned, dec : decimal, hex : hexadecimal
+ bin : binary, oct : octal
+%
+
+address_radix=hex;
+data_radix=bin;
+
+% ROM data %
+content begin
+00 : 001001000;
+01 : 000000001;
+02 : 001010000;
+03 : 000000000;
+04 : 001011000;
+05 : 010000000;
+06 : 101010011;
+07 : 010010001;
+08 : 001011000;
+09 : 111111111;
+0A : 000101111;
+0B : 001100000;
+0C : 111111111;
+0D : 000000111;
+0E : 011100001;
+0F : 110111000;
+10 : 011011001;
+11 : 110111101;
+12 : 001111000;
+13 : 000000100;
+
+end;
