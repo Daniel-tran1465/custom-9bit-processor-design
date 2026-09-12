@@ -5,7 +5,8 @@ input logic Run,
 input logic [8:0] Button,
 output logic Done,
 output logic [8:0] LEDs,
-output logic [8:0] Segs
+output logic [7:0] anode_out,
+output logic [7:0] ssd_cathode_out
 );
 
 logic [8:0] Q_inst;
@@ -21,13 +22,38 @@ logic wr_en;
 logic Led_en;
 logic Seg_en;
 logic Buttons_en;
+logic Led_en_d, Seg_en_d;
+
+logic clk_proc;
+logic clk_scan;
+
+logic [8:0] Segs;
+logic [2:0] current_digit;
+
 
 assign wr_en = W_D && ~(Q_inst[7] || Q_inst[8]);
-assign Led_en = W_D && ~(~Q_inst[7] || Q_inst[8]);
-assign Seg_en = W_D && ~(Q_inst[7] || ~Q_inst[8]);
+assign Led_en_d = W_D && ~(~Q_inst[7] || Q_inst[8]);
+assign Seg_en_d = W_D && ~(Q_inst[7] || ~Q_inst[8]);
 assign Buttons_en = W_D && ~(~Q_inst[7] || ~Q_inst[8]);
 
-assign processor_din = (wr_en) ? Q_din : Q_din_buttons;
+assign processor_din =  (wr_en) ? Q_din : Q_din_buttons;
+
+
+always_ff @(posedge Clock) begin
+    Led_en <= Led_en_d;
+    Seg_en <= Seg_en_d;
+end
+
+clock_divider #(
+    .CLK_FREQ (100_000_000),
+    .PROC_HZ  (20),
+    .SCAN_HZ  (1000)
+) Divider (
+    .clk     (Clock),
+    .resetn  (Resetn),
+    .clk_proc(clk_proc),
+    .clk_scan(clk_scan)
+);
 
 top_mem Memory (
 .clk(Clock),
@@ -38,7 +64,7 @@ top_mem Memory (
 );
 
 centralprocessorunit Processor (
-.clk(Clock),
+.clk(clk_proc),
 .reset(Resetn),
 .DIN(processor_din),
 .Run(Run),
@@ -72,4 +98,18 @@ register Buttons(
 .Rout(Q_din_buttons)
 );
 
+bcd_decode DECODE_BCD(
+.bcd(current_digit),
+.ssd_cathode_out(ssd_cathode_out)
+);
+
+led_segment SEVEN_SEGMENT(
+.clk(clk_scan),
+.reset(Resetn),
+.bus(Segs),
+.current_digit(current_digit),
+.anode_out(anode_out)
+);
+
 endmodule
+
