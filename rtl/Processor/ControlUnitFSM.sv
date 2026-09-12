@@ -2,7 +2,7 @@ module ControlUnitFSM (
 input logic run,
 input logic resetn,
 input logic clk,
-input logic [8:0] DIN,
+input logic [8:0] IRout,
 input logic G_nonzero,
 input logic G_lessthanzero,
 output logic IRin,
@@ -25,21 +25,24 @@ typedef enum logic [4:0] {
     MVI    = 5'b00001,
     ADD    = 5'b00010,
     SUB    = 5'b00011,
-    DECODE   = 5'b00100,
-    ADD_T2 = 5'b00101,
+    LOAD   = 5'b00100,
+    STORE = 5'b00101,
     BRNE = 5'b00110,
     BRLT = 5'b00111,
     SUB_S2 = 5'b01000,
     SUB_S3 = 5'b01001,
-	 LOAD = 5'b01010,
+	 DECODE = 5'b01010,
 	 LOAD_L2 = 5'b01011,
-	 STORE = 5'b01101,
+	 ADD_T2 = 5'b01101,
 	 STORE_S2 = 5'b01110,
 	 MVI_T2 = 5'b10000,
 	 FETCH = 5'b10001,
 	 ADD_T3 = 5'b10010,
 	 BB1 = 5'b10011,
-	 BB2 = 5'b10100
+	 BB2 = 5'b10100,
+	 IDLE = 5'b10101,
+	 SELECTING = 5'b10110,
+	 FETCH_WAIT = 5'B10111
 } state_e;
 
 logic [3:0] opcode;
@@ -52,21 +55,28 @@ state_e current_state, next_state;
 
 logic rst;
 
+
 always_ff @(posedge clk or negedge resetn) begin
         if (!resetn)
-            current_state <= FETCH;
-        else
-            current_state <= next_state;
+            current_state <= IDLE;
+        else begin
+            if(run == 1'b1)
+                current_state <= next_state;
+            else
+                current_state <= IDLE;
+            end
+            
     end
 
-assign opcode = {{1'b0} ,{1'b0}, DIN[8:6]};
-assign Rx = DIN[5:3];
-assign Ry = DIN[2:0];
+assign opcode = {2'b0, IRout[8:6]};
+assign Rx = IRout[5:3];
+assign Ry = IRout[2:0];
 
 assign brne = G_nonzero;
 assign brlt = G_lessthanzero;
 
 assign bbcase = {brlt, brne};
+
 
 always_comb begin
 
@@ -96,14 +106,14 @@ case (current_state)
         end
         
         MVI: begin
-            R_out   = (8'b1 << Rx);
+            R_out   = 8'b10000000;
             ADDRin = 1'b1;
-				incr_pc = 1'b1;
+			incr_pc = 1'b1;
             next_state = MVI_T2;
         end
 		  
 		  MVI_T2: begin
-				DINout = 1'b1;
+			DINout = 1'b1;
             R_in   = (8'b1 << Rx);
             Done   = 1'b1;
             next_state = FETCH;
@@ -193,7 +203,6 @@ case (current_state)
 		  BB1: begin
 				case(bbcase)
 					2'b00: begin
-							 incr_pc = 1'b1;
 							 Done = 1'b1;
 							 next_state = FETCH;
 							end
@@ -212,26 +221,43 @@ case (current_state)
 		  FETCH: begin
 				incr_pc = 1'b1;
 				R_out = 8'b10000000;
-				IRin = 1'b1;
 				ADDRin = 1'b1;
-				next_state = DECODE;
+				next_state = FETCH_WAIT;
+		  end
+		  
+		  FETCH_WAIT: begin
+		      IRin = 1'b1;
+		      next_state = DECODE;
+		  end
+		  
+		  IDLE: begin
+		        Done = 1'b0;
+		        rst = 1'b1;
+		        next_state = SELECTING;
+		  end
+		  
+		  SELECTING: begin
+		      case(run)
+		          1'b1: next_state = FETCH;
+		          default: next_state = IDLE;
+		      endcase
 		  end
 		  
         DECODE: begin
             case (opcode)
-                	5'b00000: next_state = MV;
-                	5'b00001: next_state = MVI;
-               	 	5'b00010: next_state = ADD;
-                	5'b00011: next_state = SUB;
-					 5'b01010: next_state = LOAD;
-					 5'b01101: next_state = STORE;
-					 5'b00110: next_state = BRNE;
-					 5'b00111: next_state = BRLT;
-                default: next_state = FETCH;
+                5'b00000: next_state = MV;
+                5'b00001: next_state = MVI;
+                5'b00010: next_state = ADD;
+                5'b00011: next_state = SUB;
+			    5'b00100: next_state = LOAD;
+			    5'b00101: next_state = STORE;
+			    5'b00110: next_state = BRNE;
+			    5'b00111: next_state = BRLT;
+                default: next_state = IDLE;
             endcase
         end
         
-        default: next_state = FETCH;
+        default: next_state = IDLE;
     endcase
 end
 
