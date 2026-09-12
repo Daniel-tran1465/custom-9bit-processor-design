@@ -1,7 +1,7 @@
-module Fulladder_8bit (
-    input logic [7:0] A, B,
+module Fulladder_9bit (
+    input logic [8:0] A, B,
 	 input logic cin,
-    output logic [7:0] sum,
+    output logic [8:0] sum,
     output logic co
 );
 logic [6:0] temp;
@@ -66,7 +66,14 @@ logic [6:0] temp;
      .b(B[7]),
      .ci(temp[6]),
      .s(sum[7]),
-     .co(co)
+     .co(temp[7])
     );
 
+ Fulladder_1bit U9 (
+     .a(A[8]),
+     .b(B[8]),
+     .ci(temp[7]),
+     .s(sum[8]),
+     .co(co)
+    );
 endmodule
