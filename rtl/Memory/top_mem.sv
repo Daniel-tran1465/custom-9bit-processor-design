@@ -3,7 +3,7 @@ input logic clk,
 input logic [8:0] ADDRESS,
 input logic [8:0] DATA,
 input logic wr_en,
-output logic q
+output logic [8:0]q
 );
 
 MyROM U0 (
