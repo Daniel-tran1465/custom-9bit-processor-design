@@ -1,7 +1,7 @@
 module MyROM
 #(parameter int unsigned width = 9,
-parameter int unsigned depth = 32,
-parameter string intFile = "my_ROM.mif",
+parameter int unsigned depth = 128,
+parameter string initFile = "my_ROM.mem",
 parameter int unsigned addrBits = 9)
 (
 input logic clk,
@@ -12,17 +12,21 @@ input logic wr_en
 );
 
 
-(* ram_init_file = intFile *) logic [width-1:0] rom [0:depth-1];
+logic [width-1:0] rom [0:depth-1];
+
+initial begin
+    if (initFile != "") begin
+        $readmemb(initFile, rom);
+    end
+end
 
 always_ff @ (posedge clk)
 begin
-if(clk) begin
 	if(wr_en == 1'b1) begin
-		q <= rom[ADDRESS];
-	end else begin
-		q <= DATAOUT;
+		rom[ADDRESS] <= DATAOUT;
 	end
 end
-end
+
+assign q = rom[ADDRESS];
 
 endmodule
