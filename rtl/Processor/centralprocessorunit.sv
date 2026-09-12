@@ -42,7 +42,7 @@ logic incr_pc;
 ////////////////////
 logic G_nonzero;
 logic G_lessthanzero;
-assign G_nonzero = | Gout;
+assign G_nonzero = | reg_G_out;
 assign G_lessthanzero = reg_G_out[8];
 
 ////////////////////////////
@@ -54,7 +54,7 @@ register reg_A (
 .Rout(reg_A_out)
 );
 
-Fulladder_8bit Addsub (
+Fulladder_9bit Addsub (
 .A(reg_A_out), 
 .B(bus),
 .sum(reg_G_in),
@@ -146,7 +146,7 @@ multiplexers mux_inst (
 .D8(R6_out),
 .D9(R7_out),
 .D10(reg_G_out),
-.sel({DINout, Gout, R_out[7], R_out[6], R_out[5], R_out[4], R_out[3], R_out[2], R_out[1], R_out[0]}),
+.sel({Gout, R_out[7], R_out[6], R_out[5], R_out[4], R_out[3], R_out[2], R_out[1], R_out[0], DINout}),
 .out(bus)
 );
 ///////////////////
@@ -162,7 +162,7 @@ ControlUnitFSM CUF_inst (
 .run(Run),
 .resetn(reset),
 .clk(clk),
-.DIN(DIN),
+.IRout(IRout),
 .G_nonzero(G_nonzero),
 .G_lessthanzero(G_lessthanzero),
 .IRin(IRin),
@@ -196,7 +196,7 @@ register DOUT (
 .Rout(D_OUT)
 );
 
-register WD (
+W_D_reg WD (
 .clk(clk),
 .reset(reset),
 .enable(W_D),
@@ -204,6 +204,6 @@ register WD (
 .Rout(W_out)
 );
 //////////////////
-assign BusWires = bus;
+
 
 endmodule
