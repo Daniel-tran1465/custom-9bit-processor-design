@@ -5,7 +5,7 @@ Repository này chứa toàn bộ mã nguồn thiết kế RTL và kiểm thử 
 
 Dự án được phát triển theo từng giai đoạn nâng cấp: từ một Datapath cơ bản sử dụng Bus dùng chung (Single-Bus Accumulator Architecture) đến một vi xử lý hoàn chỉnh có khả năng chạy vòng lặp, tương tác với bộ nhớ ngoài (RAM/ROM) và các ngoại vi I/O (Đèn LED, LED 7-đoạn, Nút nhấn) thông qua kỹ thuật **Memory-Mapped I/O**, cùng các lệnh rẽ nhánh có điều kiện (Branching instructions).
 
-Dự án được thiết kế, tổng hợp và mô phỏng trên công cụ **Intel Quartus Prime** và **ModelSim / QuestaSim**.
+Dự án được thiết kế, tổng hợp và mô phỏng trên công cụ **Intel Quartus Prime**, **ModelSim / QuestaSim** và **Vivado**.
 
 ---
 
