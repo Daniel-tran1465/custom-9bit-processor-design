@@ -62,7 +62,7 @@ Thiết kế đã được mô phỏng và kiểm thử kỹ lưỡng bằng Tes
 `![Simulation Waveform](docs/images/waveform_example.png)`
 
 ### Sơ đồ mạch RTL (RTL Viewer)
-(docs/RTL Schematic.png)
+[![RTL Schematic](https://github.com/Daniel-tran1465/custom-9bit-processor-design/blob/main/docs/RTL_Schematic.png)](https://github.com/Daniel-tran1465/custom-9bit-processor-design/blob/main/docs/RTL_Schematic.png)
 
 ---
 
