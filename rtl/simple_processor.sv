@@ -36,7 +36,7 @@ assign Led_en_d = W_D && ~(~Q_inst[7] || Q_inst[8]);
 assign Seg_en_d = W_D && ~(Q_inst[7] || ~Q_inst[8]);
 assign Buttons_en = W_D && ~(~Q_inst[7] || ~Q_inst[8]);
 
-assign processor_din =  (wr_en) ? Q_din : Q_din_buttons;
+assign processor_din = (Buttons_en == 1'b1) ? Q_din_buttons : Q_din;
 
 
 always_ff @(posedge Clock) begin
@@ -46,8 +46,8 @@ end
 
 clock_divider #(
     .CLK_FREQ (100_000_000),
-    .PROC_HZ  (20),
-    .SCAN_HZ  (1000)
+    .PROC_HZ  (50),
+    .SCAN_HZ  (1500)
 ) Divider (
     .clk     (Clock),
     .resetn  (Resetn),
