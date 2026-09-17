@@ -9,7 +9,7 @@ module clock_divider #(
     output logic clk_scan      // clock quét 7-seg
 );
 
-    localparam int PROC_DIV = CLK_FREQ / (2* PROC_HZ);
+    localparam  int PROC_DIV = CLK_FREQ / (2* PROC_HZ);
     localparam int SCAN_DIV = CLK_FREQ / (2* SCAN_HZ);
 
     logic [$clog2(PROC_DIV)-1:0] cnt_proc;

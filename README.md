@@ -52,10 +52,15 @@ Lệnh được mã hóa theo **định dạng 9-bit** (`III XXX YYY`):
 
 ## 🧪 Kiểm Thử & Mô Phỏng (Verification & Simulation)
 
-Thiết kế đã được mô phỏng và kiểm thử kỹ lưỡng bằng Testbench trên SystemVerilog:
-* **Kiểm thử Assembly:** Nạp chương trình chạy mẫu qua file khởi tạo bộ nhớ Memory Initialization File (`.mif`).
-* **Kiểm thử Rẽ nhánh & Vòng lặp:** Thực thi thuật toán nhân bằng phép cộng dồn thông qua vòng lặp lệnh `brne`.
-* **Truy xuất Ngoại vi:** Kiểm tra logic đọc/ghi dữ liệu từ các ngoại vi như Đèn LED và Nút bấm thông qua bộ giải mã địa chỉ (Address Decoder).
+Toàn bộ testbench nằm trong thư mục [`sim/`](sim), tự kiểm tra kết quả
+(self-checking: in `[PASS]`/`[FAIL]` cho từng assertion và tổng kết cuối
+cùng, không cần mở waveform để biết đúng/sai):
+
+| File | Phạm vi | Nội dung kiểm thử |
+|------|---------|--------------------|
+| [`sim/tb.sv`](sim/tb.sv) | Toàn bộ `simple_processor` (tích hợp) | Cả 8 lệnh (MV/MVI/ADD/SUB/LOAD/STORE/BRNE/BRLT), round-trip đọc/ghi RAM, `BRNE`/`BRLT` ở cả hai nhánh taken/not-taken, một chương trình vòng lặp đếm ngược, và khả năng phục hồi sau khi reset giữa chừng một lệnh |
+| [`sim/fsm_tb.sv`](sim/fsm_tb.sv) | Riêng `ControlUnitFSM` | Trình tự trạng thái & tín hiệu điều khiển cho từng opcode, hành vi khi `run`/reset đổi giữa chừng, và cách trạng thái `BB1` giải mã cờ rẽ nhánh cho `BRNE`/`BRLT` |
+| [`sim/adder_tb.sv`](sim/adder_tb.sv) | Riêng `Fulladder_9bit` | Cộng/trừ theo hướng định sẵn (directed) + ngẫu nhiên, so với mô hình tham chiếu (golden model) |
 
 ### Dạng sóng mô phỏng (Simulation Waveform)
 *(Hãy thêm ảnh chụp dạng sóng mô phỏng các bus tín hiệu và trạng thái FSM tại đây)*
@@ -64,10 +69,58 @@ Thiết kế đã được mô phỏng và kiểm thử kỹ lưỡng bằng Tes
 ### Sơ đồ mạch RTL (RTL Viewer)
 [![RTL Schematic](https://github.com/Daniel-tran1465/custom-9bit-processor-design/blob/main/docs/RTL_Schematic.png)](https://github.com/Daniel-tran1465/custom-9bit-processor-design/blob/main/docs/RTL_Schematic.png)
 
+### ⚠️ Lỗi RTL phát hiện được khi viết testbench
+
+Quá trình viết `sim/adder_tb.sv` và các case `BRNE`/`BRLT` trong
+`sim/fsm_tb.sv`/`sim/tb.sv` đã phát hiện ra hai lỗi RTL vốn có từ trước,
+chưa từng được testbench cũ (chỉ test `mvi`+`store`) chạy tới:
+
+1. **`rtl/Processor/Fulladder_1bit.sv`: bit tổng (`s`) không phụ thuộc vào
+   carry-in.** `assign s = a ^ b_inst ^ ci;` với `b_inst = b ^ ci` — xét
+   theo đại số Boolean thì hai số hạng `ci` tự triệt tiêu nhau
+   (`a^b^ci^ci = a^b`), nên bất kỳ phép `add`/`sub` nào cần carry/borrow
+   lan sang bit kế tiếp đều cho kết quả sai (ví dụ `1+1`, `255+1`, ...).
+   Điều này ảnh hưởng tới gần như mọi `ADD`/`SUB` không tầm thường.
+   Các case trong `sim/adder_tb.sv` và các test `ADD`/`SUB`/vòng lặp
+   trong `sim/tb.sv` **sẽ FAIL** khi chạy trên RTL hiện tại — đúng như
+   thiết kế, để chỉ thẳng ra lỗi này.
+2. **`rtl/Processor/ControlUnitFSM.sv`: trạng thái `BB1` không phân biệt
+   được `BRNE` với `BRLT`.** Cả hai opcode đều dẫn vào chung trạng thái
+   `BB1`, và điều kiện rẽ nhánh ở đó chỉ kiểm tra `bbcase != 2'b00`
+   (tương đương "G khác 0"). Vì kết quả âm cũng luôn khác 0, điều này vô
+   tình đúng với `BRNE`, nhưng có nghĩa `BRLT` sẽ nhảy nhánh với **bất kỳ**
+   kết quả khác 0 nào, không chỉ khi kết quả âm. Case
+   `"BRLT not taken when G>0"` trong `sim/fsm_tb.sv` sẽ FAIL vì lý do này.
+
+Cả hai lỗi đều **chưa được sửa** trong repo này — testbench được viết để
+mô tả đúng hành vi kiến trúc *mong muốn*, nên sẽ báo FAIL rõ ràng thay vì
+bị chỉnh cho khớp với đầu ra (sai) hiện tại.
+
 ---
 
 ## 🛠️ Hướng Dẫn Chạy Mô Phỏng
 
 1. Clone repository này về máy local:
    ```bash
-   git clone [https://github.com/ten-user-cua-ban/custom-9bit-processor-design.git](https://github.com/ten-user-cua-ban/custom-9bit-processor-design.git)
+   git clone https://github.com/Daniel-tran1465/custom-9bit-processor-design.git
+   ```
+
+2. **Chạy bằng Vivado (GUI):** tạo project mới (hoặc thêm nguồn vào project
+   có sẵn), add toàn bộ `rtl/**/*.sv` làm design source, `sim/tb.sv` làm
+   simulation source (đặt làm simulation top), `constrs/simple_processor.xdc`
+   làm constraints nếu cần synthesis/implementation, rồi **Run Simulation**.
+   Muốn chạy `sim/fsm_tb.sv` hoặc `sim/adder_tb.sv` thay vì `sim/tb.sv`, đổi
+   simulation top trong *Simulation Settings*, hoặc tạo thêm một simulation
+   fileset riêng chỉ chứa file đó.
+
+3. **Chạy bằng dòng lệnh (`xsim`, trong Vivado shell):**
+   ```bash
+   xvlog -sv rtl/*.sv rtl/Processor/*.sv rtl/Memory/*.sv sim/tb.sv
+   xelab tb -s tb_sim
+   xsim tb_sim -runall
+   ```
+   Đổi `sim/tb.sv`/`tb` thành `sim/fsm_tb.sv`/`fsm_tb` hoặc
+   `sim/adder_tb.sv`/`adder_tb` để chạy bộ test đơn vị tương ứng. `sim/tb.sv`
+   cần `rtl/Memory/my_ROM.mem` nằm trong working directory/search path của
+   simulator để `$readmemb` trong `MyROM.sv` phân giải được (Vivado GUI tự
+   copy file này khi chạy).
