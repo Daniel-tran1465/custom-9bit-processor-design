@@ -69,32 +69,35 @@ cùng, không cần mở waveform để biết đúng/sai):
 ### Sơ đồ mạch RTL (RTL Viewer)
 [![RTL Schematic](https://github.com/Daniel-tran1465/custom-9bit-processor-design/blob/main/docs/RTL_Schematic.png)](https://github.com/Daniel-tran1465/custom-9bit-processor-design/blob/main/docs/RTL_Schematic.png)
 
-### ⚠️ Lỗi RTL phát hiện được khi viết testbench
+### ✅ Lỗi RTL phát hiện & đã sửa nhờ testbench
 
 Quá trình viết `sim/adder_tb.sv` và các case `BRNE`/`BRLT` trong
 `sim/fsm_tb.sv`/`sim/tb.sv` đã phát hiện ra hai lỗi RTL vốn có từ trước,
-chưa từng được testbench cũ (chỉ test `mvi`+`store`) chạy tới:
+chưa từng được testbench cũ (chỉ test `mvi`+`store`) chạy tới. Cả hai đã
+được sửa:
 
 1. **`rtl/Processor/Fulladder_1bit.sv`: bit tổng (`s`) không phụ thuộc vào
-   carry-in.** `assign s = a ^ b_inst ^ ci;` với `b_inst = b ^ ci` — xét
-   theo đại số Boolean thì hai số hạng `ci` tự triệt tiêu nhau
-   (`a^b^ci^ci = a^b`), nên bất kỳ phép `add`/`sub` nào cần carry/borrow
-   lan sang bit kế tiếp đều cho kết quả sai (ví dụ `1+1`, `255+1`, ...).
-   Điều này ảnh hưởng tới gần như mọi `ADD`/`SUB` không tầm thường.
-   Các case trong `sim/adder_tb.sv` và các test `ADD`/`SUB`/vòng lặp
-   trong `sim/tb.sv` **sẽ FAIL** khi chạy trên RTL hiện tại — đúng như
-   thiết kế, để chỉ thẳng ra lỗi này.
+   carry-in.** Bản cũ: `assign s = a ^ b_inst ^ ci;` với
+   `b_inst = b ^ ci` — xét theo đại số Boolean thì hai số hạng `ci` tự
+   triệt tiêu nhau (`a^b^ci^ci = a^b`), nên bất kỳ phép `add`/`sub` nào
+   cần carry/borrow lan sang bit kế tiếp đều cho kết quả sai (ví dụ
+   `1+1`, `255+1`, ...). **Đã sửa:** `Fulladder_1bit` giờ là một full
+   adder chuẩn (`s = a^b^ci`, `co = (a&b) | (ci&(a^b))`), còn việc đảo
+   bit `B` khi trừ (two's complement) được chuyển lên `Fulladder_9bit`
+   — XOR toàn bộ `B` với `cin` trước khi đưa vào chuỗi cộng dồn, thay vì
+   để mỗi tầng tự đảo theo carry cục bộ của chính nó (vốn sai).
 2. **`rtl/Processor/ControlUnitFSM.sv`: trạng thái `BB1` không phân biệt
    được `BRNE` với `BRLT`.** Cả hai opcode đều dẫn vào chung trạng thái
-   `BB1`, và điều kiện rẽ nhánh ở đó chỉ kiểm tra `bbcase != 2'b00`
+   `BB1`, và điều kiện rẽ nhánh cũ chỉ kiểm tra `bbcase != 2'b00`
    (tương đương "G khác 0"). Vì kết quả âm cũng luôn khác 0, điều này vô
-   tình đúng với `BRNE`, nhưng có nghĩa `BRLT` sẽ nhảy nhánh với **bất kỳ**
-   kết quả khác 0 nào, không chỉ khi kết quả âm. Case
-   `"BRLT not taken when G>0"` trong `sim/fsm_tb.sv` sẽ FAIL vì lý do này.
+   tình đúng với `BRNE`, nhưng khiến `BRLT` nhảy nhánh với **bất kỳ**
+   kết quả khác 0 nào, không chỉ khi kết quả âm. **Đã sửa:** `BB1` giờ
+   đọc lại `opcode[0]` (IR vẫn còn giữ nguyên opcode `BRNE`/`BRLT` tại
+   trạng thái này) để chọn đúng cờ (`brne` hoặc `brlt`) cần kiểm tra.
 
-Cả hai lỗi đều **chưa được sửa** trong repo này — testbench được viết để
-mô tả đúng hành vi kiến trúc *mong muốn*, nên sẽ báo FAIL rõ ràng thay vì
-bị chỉnh cho khớp với đầu ra (sai) hiện tại.
+Toàn bộ test trong `sim/tb.sv`, `sim/fsm_tb.sv`, `sim/adder_tb.sv` — kể cả
+các case trước đây được thiết kế để lộ 2 lỗi trên — hiện được kỳ vọng
+**PASS** trên RTL hiện tại.
 
 ---
 

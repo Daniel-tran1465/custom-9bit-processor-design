@@ -11,3 +11,4 @@ module Fulladder_1bit (
     assign co = (a & b) | (ci & (a ^ b));
 
 endmodule
+

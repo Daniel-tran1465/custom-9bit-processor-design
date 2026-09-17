@@ -5,7 +5,6 @@
 *.runs/
 *.sim/
 .Xil/
-*.xpr
 
 # Vivado logs, journals, webtalk
 vivado*.jou
