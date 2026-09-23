@@ -4,7 +4,7 @@ module Fulladder_9bit (
     output logic [8:0] sum,
     output logic co
 );
-logic [6:0] temp;
+logic [7:0] temp;
 logic [8:0] B_eff;
 
 // Two's-complement adder/subtractor: invert every bit of B when cin==1
