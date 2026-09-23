@@ -199,8 +199,8 @@ register DOUT (
 W_D_reg WD (
 .clk(clk),
 .reset(reset),
-.enable(W_D),
-.Rin(1'b1),
+  .enable(1'b1),
+  .Rin(W_D),
 .Rout(W_out)
 );
 //////////////////
