@@ -62,10 +62,6 @@ cùng, không cần mở waveform để biết đúng/sai):
 | [`sim/fsm_tb.sv`](sim/fsm_tb.sv) | Riêng `ControlUnitFSM` | Trình tự trạng thái & tín hiệu điều khiển cho từng opcode, hành vi khi `run`/reset đổi giữa chừng, và cách trạng thái `BB1` giải mã cờ rẽ nhánh cho `BRNE`/`BRLT` |
 | [`sim/adder_tb.sv`](sim/adder_tb.sv) | Riêng `Fulladder_9bit` | Cộng/trừ theo hướng định sẵn (directed) + ngẫu nhiên, so với mô hình tham chiếu (golden model) |
 
-### Dạng sóng mô phỏng (Simulation Waveform)
-*(Hãy thêm ảnh chụp dạng sóng mô phỏng các bus tín hiệu và trạng thái FSM tại đây)*
-`![Simulation Waveform](docs/images/waveform_example.png)`
-
 ### Sơ đồ mạch RTL (RTL Viewer)
 [![RTL Schematic](https://github.com/Daniel-tran1465/custom-9bit-processor-design/blob/main/docs/RTL_Schematic.png)](https://github.com/Daniel-tran1465/custom-9bit-processor-design/blob/main/docs/RTL_Schematic.png)
 
@@ -96,8 +92,7 @@ chưa từng được testbench cũ (chỉ test `mvi`+`store`) chạy tới. C�
    trạng thái này) để chọn đúng cờ (`brne` hoặc `brlt`) cần kiểm tra.
 
 Toàn bộ test trong `sim/tb.sv`, `sim/fsm_tb.sv`, `sim/adder_tb.sv` — kể cả
-các case trước đây được thiết kế để lộ 2 lỗi trên — hiện được kỳ vọng
-**PASS** trên RTL hiện tại.
+các case trước đây được thiết kế để lộ 2 lỗi trên — Kết quả: tb.sv 13/13 · fsm_tb 58/58 · adder_tb 114/114 trên RTL hiện tại.
 
 ---
 
